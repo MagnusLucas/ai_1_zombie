@@ -2,22 +2,25 @@ extends Node2D
 
 var obstacles = []
 var zombies = []
+var player
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	player = Player.new(get_viewport_rect().size/2)
+	add_child(player)
 	for i in range(Globals.OBSTACLE_COUNT):
 		create_obstacle()
 	for i in range(Globals.ZOMBIE_COUNT):
 		create_zombie()
-	add_child(Player.new(get_viewport_rect().size/2))
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	pass
+	if randi_range(0,59) == 0:
+		create_zombie()
 
 func is_not_on_player(potential_coords, radius):
-	if potential_coords.distance_to(get_viewport_rect().size/2) < radius + Globals.SAFE_RADIUS:
+	if potential_coords.distance_to(player.position) < radius + Globals.SAFE_RADIUS:
 		return false
 	return true
 
