@@ -1,30 +1,41 @@
 class_name Bullet
 extends Sprite2D
 
-var radius = 2;
-var velocity;
-var velocityMultiplier = 5
+var directionVector
 var color = Color.AQUA
+var rayEndPoint #global position of the end of the bullet
+var lifetime = 3 #fps
+var rayWidth = 2
 
-func _init(aPosition, aRadius, aVelocity) -> void:
+func _init(aPosition, aDirection) -> void:
 	position = aPosition
-	radius = aRadius
-	velocity = aVelocity * velocityMultiplier
+	directionVector = aDirection
+	rayEndPoint = position + directionVector
 	
-func _physics_process(_delta: float) -> void:
-	if !get_viewport_rect().has_point(position):
+func _ready() -> void:
+	rayCast()
+	
+func _process(_delta: float) -> void:
+	if lifetime <= 0:
 		queue_free()
-	position += velocity
-	var zombies = get_parent().zombies
-	var obstacles = get_parent().obstacles
-	for obstacle in obstacles:
-		if obstacle.position.distance_to(position) <= obstacle.radius + radius:
-			queue_free()
-	for zombie in zombies:
-		if zombie.position.distance_to(position) <= zombie.radius + radius:
-			queue_free()
-			get_parent().zombies.remove_at(get_parent().zombies.find(zombie))
-			zombie.queue_free()
+	else:
+		lifetime -= 1
 	
 func _draw():
-	draw_circle(Vector2i(0,0), radius, color)
+	# line is drawn at the position of this sprite, so its beginning is at Vector2i(0,0) 
+	# and rayEndPoint is global, so position needs to be distracted
+	draw_line(Vector2i(0,0), rayEndPoint - position, color, rayWidth)
+	
+func rayCast():
+	var colliding = false
+	while get_viewport_rect().has_point(rayEndPoint) and not colliding:
+		rayEndPoint += directionVector
+		# we should probably be checking only zombies and obstacles that are close, but for now it is what it is
+		var zombies = get_parent().zombies
+		var obstacles = get_parent().obstacles
+		for obstacle in obstacles:
+			if obstacle.has_point(rayEndPoint):
+				colliding = true
+		for zombie in zombies:
+			if zombie.has_point(rayEndPoint):
+				colliding = true

@@ -19,6 +19,8 @@ func _process(_delta: float) -> void:
 	if randi_range(0,59) == 0:
 		create_zombie()
 
+
+##This function checks whether potential_coords is an aviable space to place a circle with radius radius 
 func is_not_on_player(potential_coords, radius):
 	if potential_coords.distance_to(player.position) < radius + Globals.SAFE_RADIUS:
 		return false

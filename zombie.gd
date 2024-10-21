@@ -24,3 +24,11 @@ func _process(_delta: float) -> void:
 
 func _draw():
 	draw_circle(Vector2i(0,0), radius, color)
+	
+## checks if specific coordinates are inside this zombie
+func has_point(coordinates):
+	if coordinates.distance_to(position) <= radius:
+		get_parent().zombies.remove_at(get_parent().zombies.find(self))
+		queue_free()
+		return true
+	return false

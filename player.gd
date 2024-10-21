@@ -12,6 +12,10 @@ var acceleration = 30.0
 var max_speed = 100.0
 var velocity = Vector2(0,0)
 
+# for reversing the position when the player hits an obstacle
+var last_position
+var last_rotation
+
 func _init(aCoords) -> void:
 	position = aCoords
 	var h = a*sqrt(3)/2
@@ -22,26 +26,29 @@ func _init(aCoords) -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
-			get_parent().add_child(Bullet.new(position + v3.rotated(rotation), wallThickness, (get_viewport().get_mouse_position() - position).normalized()))
+			get_parent().add_child(Bullet.new(position + v3.rotated(rotation), (get_viewport().get_mouse_position() - position).normalized()))
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _physics_process(delta: float) -> void:
+	var mousePosition = get_viewport().get_mouse_position()
+	var angle = Vector2(1,0).angle_to(mousePosition - position)
+	last_rotation = rotation
+	rotation = angle
 	var obstacles = get_parent().obstacles
 	check_collision_border(get_viewport_rect())
 	for obstacle in obstacles:
-		check_collision(obstacle.position, obstacle.radius)
+		check_collision(obstacle)
 		
-	var mousePosition = get_viewport().get_mouse_position()
-	var angle = Vector2(1,0).angle_to(mousePosition - position)
-	rotation = angle
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		var direction = (mousePosition - position).normalized()
 		velocity += acceleration * delta * direction 
 		if velocity.length() > max_speed:
 			velocity = velocity.normalized()*max_speed
+		last_position = position
 		position += velocity*delta
 	elif !velocity.is_zero_approx():
 		velocity = (velocity.length() - acceleration*delta)*velocity.normalized()
+		last_position = position
 		position += velocity*delta
 	
 	
@@ -53,6 +60,8 @@ func _draw():
 	
 func handle_collision(colliderPosition, vertex = null):
 	#sumthing with normals
+	position = last_position
+	rotation = last_rotation
 	velocity -= velocity*2
 	
 func check_collision_border(borders):
@@ -65,9 +74,9 @@ func check_collision_border(borders):
 			else:
 				handle_collision(Vector2(1,vertex.y), vertex)
 	
-func check_collision(colliderPosition, colliderRadius):
+func check_collision(collider):
 	var vertex_in_circle = func(vertexPosition):
-		return (vertexPosition - colliderPosition).length() < colliderRadius
+		return collider.has_point(vertexPosition)
 	for vertex in [v1,v2,v3]:
-		if vertex_in_circle.call(position+vertex):
-			handle_collision(colliderPosition, vertex)
+		if vertex_in_circle.call(position+vertex.rotated(rotation)):
+			handle_collision(collider, vertex)
