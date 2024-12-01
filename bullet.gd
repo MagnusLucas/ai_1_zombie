@@ -13,7 +13,7 @@ func _init(aPosition, aDirection) -> void:
 	rayEndPoint = position + directionVector
 	
 func _ready() -> void:
-	rayCast()
+	_rayCast()
 	
 func _process(_delta: float) -> void:
 	if lifetime <= 0:
@@ -26,7 +26,7 @@ func _draw():
 	# and rayEndPoint is global, so position needs to be distracted
 	draw_line(Vector2i(0,0), rayEndPoint - position, color, rayWidth)
 	
-func rayCast():
+func _rayCast():
 	var colliding = false
 	while get_viewport_rect().has_point(rayEndPoint) and not colliding:
 		rayEndPoint += directionVector

@@ -63,26 +63,26 @@ func _draw():
 	draw_line(v1,v3,color,wallThickness)
 	draw_circle(v3, wallThickness, color.inverted())
 	
-func handle_collision(_colliderPosition, _vertex = null):
+func _handle_collision(_colliderPosition, _vertex = null):
 	#sumthing with normals
 	position = last_position
 	rotation = last_rotation
 	velocity -= velocity*2
 	heading = velocity.normalized()
 	
-func check_collision_border(borders):
+func _check_collision_border(borders):
 	var vertex_inside_board = func(vertexPosition):
 		return borders.has_point(vertexPosition)
 	for vertex in [v1,v2,v3]:
 		if !vertex_inside_board.call(position+vertex):
 			if borders.position.x > vertex.x or borders.end.x < vertex.x:
-				handle_collision(Vector2(vertex.x,1), vertex)
+				_handle_collision(Vector2(vertex.x,1), vertex)
 			else:
-				handle_collision(Vector2(1,vertex.y), vertex)
+				_handle_collision(Vector2(1,vertex.y), vertex)
 	
-func check_collision(collider):
+func _check_collision(collider):
 	var vertex_in_circle = func(vertexPosition):
 		return collider.has_point(vertexPosition)
 	for vertex in [v1,v2,v3]:
 		if vertex_in_circle.call(position+vertex.rotated(rotation)):
-			handle_collision(collider, vertex)
+			_handle_collision(collider, vertex)

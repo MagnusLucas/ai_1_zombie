@@ -26,11 +26,11 @@ func calculate_steering_force():
 	# code goes here
 	#force_sum += arrive(player_position, Deceleration.NORMAL)
 	#force_sum += evade(player)
-	force_sum += Hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
+	force_sum += _hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
 	queue_redraw()
 	return force_sum
 
-func seek(target_position, color = null):
+func _seek(target_position, color = null):
 	var desired_velocity = (target_position - zombie.position).normalized() * zombie.max_speed
 	
 	#for displaying
@@ -38,7 +38,7 @@ func seek(target_position, color = null):
 		forces_to_draw[color] =  desired_velocity - zombie.velocity
 	return desired_velocity - zombie.velocity
 
-func flee(target_position, color = null):
+func _flee(target_position, color = null):
 	var panic_distance_squared = Globals.SAFE_RADIUS * Globals.SAFE_RADIUS
 	var distance_to_target_squared = pow(zombie.position.distance_to(target_position), 2)
 	if distance_to_target_squared > panic_distance_squared:
@@ -50,7 +50,7 @@ func flee(target_position, color = null):
 		forces_to_draw[color] =  desired_velocity - zombie.velocity
 	return desired_velocity - zombie.velocity
 
-func arrive(target_position, deceleration, color = null):
+func _arrive(target_position, deceleration, color = null):
 	var vector_to_target = target_position - zombie.position
 	var distance_to_target = zombie.position.distance_to(target_position)
 	if distance_to_target > 0:
@@ -68,7 +68,7 @@ func arrive(target_position, deceleration, color = null):
 
 ###Emi vvv
 
-func evade(player, color = null):
+func _evade(player, color = null):
 	var to_player = player.position - zombie.position
 	#the look-ahead time is proportional to the distance between the pursuer
 	#and the evader; and is inversely proportional to the sum of the
@@ -77,10 +77,10 @@ func evade(player, color = null):
 	#flee away from predicted future position of the pursuer
 	#for displaying
 	if color:
-		forces_to_draw[color] = flee(player.position + player.velocity * look_ahead_time )
-	return flee(player.position + player.velocity * look_ahead_time )
+		forces_to_draw[color] = _flee(player.position + player.velocity * look_ahead_time )
+	return _flee(player.position + player.velocity * look_ahead_time )
 
-func get_hiding_position(obastacle_position, obstacle_radius, target_position):
+func _get_hiding_position(obastacle_position, obstacle_radius, target_position):
 	#calculate how far away the agent is to be from the chosen obstacle’s bounding radius
 	const distance_from_boundary = 30.0;
 	var dist_away = obstacle_radius + distance_from_boundary
@@ -91,7 +91,7 @@ func get_hiding_position(obastacle_position, obstacle_radius, target_position):
 	return (to_obstacle * dist_away) + obastacle_position
 	
 	
-func Hide(player, obstacles, color = null):
+func _hide(player, obstacles, color = null):
 	var best_hiding_spot
 	var hiding_spot
 	var dist 
@@ -99,7 +99,7 @@ func Hide(player, obstacles, color = null):
 	var dist_to_closest = MAX_VALUE
 	for obstacle in obstacles:
 		#calculate the position of the hiding spot for this obstacle
-		hiding_spot = get_hiding_position(obstacle.position, obstacle.radius, player.position) 
+		hiding_spot = _get_hiding_position(obstacle.position, obstacle.radius, player.position) 
 		#work in distance-squared space to find the closest hiding
 		#spot to the agent
 		dist = hiding_spot.distance_squared_to(zombie.position)
@@ -111,13 +111,13 @@ func Hide(player, obstacles, color = null):
 	if (dist_to_closest == MAX_VALUE):
 		#for displaying
 		if color:
-			forces_to_draw[color] = evade(player)
-		return evade(player)
+			forces_to_draw[color] = _evade(player)
+		return _evade(player)
 	#else use Arrive on the hiding spot
 	#for displaying
 	if color:
-		forces_to_draw[color] = arrive(best_hiding_spot, Deceleration.FAST)
-	return arrive(best_hiding_spot, Deceleration.FAST)
+		forces_to_draw[color] = _arrive(best_hiding_spot, Deceleration.FAST)
+	return _arrive(best_hiding_spot, Deceleration.FAST)
 
 
 
@@ -130,7 +130,7 @@ var wander_distance = 1.0
 var wander_jitter = 0.0
 var wander_target = Vector2(wander_radius,wander_radius)
 
-func wander(color = null):
+func _wander(color = null):
 	#
 	wander_target += Vector2(randf_range(-1,1) * wander_jitter, randf_range(-1,1) * wander_jitter)
 	wander_target = wander_target.normalized()
@@ -146,25 +146,25 @@ func wander(color = null):
 		forces_to_draw[color] = target_world - zombie.position
 	return target_world - zombie.position
 
-func draw_force(force, color):
+func _draw_force(force, color):
 	draw_line(Vector2.ZERO, force, color, 3)
 
 func _draw():
 	for color in forces_to_draw:
-		draw_force(forces_to_draw[color], color)
+		_draw_force(forces_to_draw[color], color)
 
 ### me ^^^
 
 ### riv vvv
 
-func pursuit(player, color = null):
+func _pursuit(player, color = null):
 	#if the evader is ahead and facing the agent then we can just seek
 	#for the evader's current position. 
 	var ToEvader = player.position - zombie.position; 
 	var RelativeHeading = zombie.heading.dot(player.heading); 
 	if ((ToEvader.dot(zombie.heading) > 0) && (RelativeHeading < -0.95)):
 	#acos(0.95)=18 degs 
-		return seek(player.position);
+		return _seek(player.position);
 	#Not considered ahead so we predict where the evader will be. 
 	#the look-ahead time is proportional to the distance between the evader 
 	#and the pursuer; and is inversely proportional to the sum of the 
@@ -173,17 +173,17 @@ func pursuit(player, color = null):
 	#now seek to the predicted future position of the evader 
 	#for displaying
 	if color:
-		forces_to_draw[color] = seek(player.position + player.velocity * LookAheadTime)
-	return seek(player.position + player.velocity * LookAheadTime);
+		forces_to_draw[color] = _seek(player.position + player.velocity * LookAheadTime)
+	return _seek(player.position + player.velocity * LookAheadTime);
 
 
-func obstacle_avoidance(): # riv
+func _obstacle_avoidance(): # riv
 	# box width of triangle * same*2 or so*players speed
 	# tag nearby obstacles out of all of them to only consider obstacles nearby (become local space)
 	# check if obstacles overlap detection box
 	pass
 
-func wall_avoidance():
+func _wall_avoidance():
 	pass
 
 # interpose() not necessary
@@ -191,7 +191,7 @@ func wall_avoidance():
 # path_following() and offset_pursuit() not necessary
 
 
-func group_behaviors(): # nowy skrypt? rozbic na separation alignment cohesion flocking
+func _group_behaviors(): # nowy skrypt? rozbic na separation alignment cohesion flocking
 	pass
 
 ### riv ^^^
