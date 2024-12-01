@@ -11,6 +11,7 @@ var v3
 var acceleration = 30.0
 var max_speed = 100.0
 var velocity = Vector2(0,0)
+var heading = velocity.normalized()
 
 # for reversing the position when the player hits an obstacle
 var last_position
@@ -18,6 +19,7 @@ var last_rotation
 
 func _init(aCoords) -> void:
 	position = aCoords
+	name = "Player"
 	var h = a*sqrt(3)/2
 	v1 = round(Vector2(-h/2, a/2))
 	v2 = round(Vector2(-h/2, -a/2))
@@ -42,12 +44,15 @@ func _physics_process(delta: float) -> void:
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		var direction = (mousePosition - position).normalized()
 		velocity += acceleration * delta * direction 
+		heading = velocity.normalized()
 		if velocity.length() > max_speed:
-			velocity = velocity.normalized()*max_speed
+			velocity = heading*max_speed
+			heading = velocity.normalized()
 		last_position = position
 		position += velocity*delta
 	elif !velocity.is_zero_approx():
-		velocity = (velocity.length() - acceleration*delta)*velocity.normalized()
+		velocity = (velocity.length() - acceleration*delta)*heading
+		heading = velocity.normalized()
 		last_position = position
 		position += velocity*delta
 	
@@ -58,11 +63,12 @@ func _draw():
 	draw_line(v1,v3,color,wallThickness)
 	draw_circle(v3, wallThickness, color.inverted())
 	
-func handle_collision(colliderPosition, vertex = null):
+func handle_collision(_colliderPosition, _vertex = null):
 	#sumthing with normals
 	position = last_position
 	rotation = last_rotation
 	velocity -= velocity*2
+	heading = velocity.normalized()
 	
 func check_collision_border(borders):
 	var vertex_inside_board = func(vertexPosition):
