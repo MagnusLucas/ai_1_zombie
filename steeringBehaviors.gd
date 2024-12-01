@@ -26,7 +26,8 @@ func calculate_steering_force():
 	# code goes here
 	#force_sum += arrive(player_position, Deceleration.NORMAL)
 	#force_sum += evade(player)
-	force_sum += Hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
+	#force_sum += Hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
+	force_sum += wander(Color.GREEN_YELLOW)
 	queue_redraw()
 	return force_sum
 
@@ -126,9 +127,11 @@ func Hide(player, obstacles, color = null):
 ###me vvv
 
 var wander_radius = 10.0
-var wander_distance = 1.0
-var wander_jitter = 0.0
-var wander_target = Vector2(wander_radius,wander_radius)
+# if they spin in place increase wander distance/decrease wander radius
+var wander_distance = 20.0
+#if they keep going the same direction decrease jitter
+var wander_jitter = 1.0
+var wander_target = Vector2(randf_range(-1,1),randf_range(-1,1)).normalized()*wander_radius #local target
 
 func wander(color = null):
 	#

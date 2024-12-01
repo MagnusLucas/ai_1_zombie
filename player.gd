@@ -1,15 +1,15 @@
 class_name Player
 extends Sprite2D
 
-var a = 20.0
+var side_size = 20.0
 var color = Color.DODGER_BLUE
 var wallThickness = 2
 var v1
 var v2
 var v3
 
-var acceleration = 30.0
-var max_speed = 100.0
+const acceleration = 30.0
+const max_speed = 100.0
 var velocity = Vector2(0,0)
 var heading = velocity.normalized()
 
@@ -20,10 +20,10 @@ var last_rotation
 func _init(aCoords) -> void:
 	position = aCoords
 	name = "Player"
-	var h = a*sqrt(3)/2
-	v1 = round(Vector2(-h/2, a/2))
-	v2 = round(Vector2(-h/2, -a/2))
-	v3 = round(Vector2(h/2, 0))
+	var height = side_size*sqrt(3)/2
+	v1 = round(Vector2(-height/2, side_size/2))
+	v2 = round(Vector2(-height/2, -side_size/2))
+	v3 = round(Vector2(height/2, 0))
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:

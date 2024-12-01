@@ -10,7 +10,7 @@ var heading = velocity.normalized()
 var side = heading.rotated(PI/2)
 
 var mass = 1
-var max_speed = 100
+var max_speed = 30
 var max_force = 10
 var max_turn_rate = 10 #rad/s
 
