@@ -24,10 +24,10 @@ func calculate_steering_force():
 	var force_sum = Vector2.ZERO
 	var player = get_node("/root/root/Player")
 	# code goes here
-	#force_sum += arrive(player_position, Deceleration.NORMAL)
-	#force_sum += evade(player)
+	#force_sum += _arrive(player_position, Deceleration.NORMAL)
+	#force_sum += _evade(player)
 	#force_sum += _hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
-	force_sum += wander(Color.GREEN_YELLOW)
+	force_sum += _wander(Color.GREEN_YELLOW)
 	queue_redraw()
 	return force_sum
 

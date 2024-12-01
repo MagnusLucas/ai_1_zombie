@@ -37,9 +37,9 @@ func _physics_process(delta: float) -> void:
 	last_rotation = rotation
 	rotation = angle
 	var obstacles = get_parent().obstacles
-	check_collision_border(get_viewport_rect())
+	_check_collision_border(get_viewport_rect())
 	for obstacle in obstacles:
-		check_collision(obstacle)
+		_check_collision(obstacle)
 		
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		var direction = (mousePosition - position).normalized()
