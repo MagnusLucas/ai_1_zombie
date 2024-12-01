@@ -24,14 +24,14 @@ func calculate_steering_force():
 	var force_sum = Vector2.ZERO
 	var player = get_node("/root/root/Player")
 	# code goes here
-	#force_sum += _arrive(player_position, Deceleration.NORMAL)
+	#force_sum += _arrive(player.position, Deceleration.NORMAL)
 	#force_sum += _evade(player)
 	#force_sum += _hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
-	force_sum += _wander(Color.GREEN_YELLOW)
+	#force_sum += _wander(Color.GREEN_YELLOW)
 	queue_redraw()
 	return force_sum
 
-func _seek(target_position, color = null):
+func seek(target_position, color = null):
 	var desired_velocity = (target_position - zombie.position).normalized() * zombie.max_speed
 	
 	#for displaying
@@ -126,15 +126,15 @@ func _hide(player, obstacles, color = null):
 
 ###me vvv
 
-var wander_radius = 10.0
-# if they spin in place increase wander distance/decrease wander radius
-var wander_distance = 20.0
-#if they keep going the same direction decrease jitter
-var wander_jitter = 1.0
+const wander_radius = 10.0
 var wander_target = Vector2(randf_range(-1,1),randf_range(-1,1)).normalized()*wander_radius #local target
 
 func _wander(color = null):
-	#
+	# if they spin in place increase wander distance/decrease wander radius
+	const wander_distance = 20.0
+	#if they keep going the same direction decrease jitter
+	const wander_jitter = 1.0
+	
 	wander_target += Vector2(randf_range(-1,1) * wander_jitter, randf_range(-1,1) * wander_jitter)
 	wander_target = wander_target.normalized()
 	wander_target *= wander_radius
@@ -167,7 +167,7 @@ func _pursuit(player, color = null):
 	var RelativeHeading = zombie.heading.dot(player.heading); 
 	if ((ToEvader.dot(zombie.heading) > 0) && (RelativeHeading < -0.95)):
 	#acos(0.95)=18 degs 
-		return _seek(player.position);
+		return seek(player.position);
 	#Not considered ahead so we predict where the evader will be. 
 	#the look-ahead time is proportional to the distance between the evader 
 	#and the pursuer; and is inversely proportional to the sum of the 
@@ -176,8 +176,8 @@ func _pursuit(player, color = null):
 	#now seek to the predicted future position of the evader 
 	#for displaying
 	if color:
-		forces_to_draw[color] = _seek(player.position + player.velocity * LookAheadTime)
-	return _seek(player.position + player.velocity * LookAheadTime);
+		forces_to_draw[color] = seek(player.position + player.velocity * LookAheadTime)
+	return seek(player.position + player.velocity * LookAheadTime);
 
 
 func _obstacle_avoidance(): # riv

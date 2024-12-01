@@ -5,7 +5,7 @@ static var radius = 10;
 var color = Color.DARK_RED
 var filled = true
 
-var velocity = Vector2(0,0)
+var velocity = Vector2(100,0)
 var heading = velocity.normalized()
 var side = heading.rotated(PI/2)
 
@@ -14,7 +14,8 @@ var max_speed = 30
 var max_force = 10
 var max_turn_rate = 10 #rad/s
 
-var steering_behavior
+var steering_behaviour
+var group_steering
 
 static func not_on_obstacle_or_zombie(obstacles, zombies, potential_coords):
 	for obstacle in obstacles:
@@ -29,11 +30,13 @@ func _init(coords) -> void:
 	position = coords
 
 func _ready() -> void:
-	steering_behavior = Steering_Behaviors.new()
-	add_child(steering_behavior)
+	steering_behaviour = Steering_Behaviors.new()
+	add_child(steering_behaviour)
+	group_steering = Group_Steering.new()
+	add_child(group_steering)
 
 func _physics_process(delta: float) -> void:
-	var acceleration = steering_behavior.calculate_steering_force()/mass
+	var acceleration = (steering_behaviour.calculate_steering_force() + group_steering.calculate_steering_force())/mass
 	# update velocity
 	velocity += acceleration * delta
 	velocity = velocity.limit_length(max_speed)
