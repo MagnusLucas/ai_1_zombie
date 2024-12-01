@@ -5,7 +5,7 @@ static var radius = 10;
 var color = Color.DARK_RED
 var filled = true
 
-var velocity = Vector2(100,0)
+var velocity = Vector2(0,0)
 var heading = velocity.normalized()
 var side = heading.rotated(PI/2)
 

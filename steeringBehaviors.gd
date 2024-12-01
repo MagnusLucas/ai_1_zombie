@@ -96,8 +96,8 @@ func _hide(player, obstacles, color = null):
 	var best_hiding_spot
 	var hiding_spot
 	var dist 
-	var MAX_VALUE = pow((get_viewport_rect().size.x + get_viewport_rect().size.y) * 2, 2)
-	var dist_to_closest = MAX_VALUE
+	var max_value = pow((get_viewport_rect().size.x + get_viewport_rect().size.y) * 2, 2)
+	var dist_to_closest = max_value
 	for obstacle in obstacles:
 		#calculate the position of the hiding spot for this obstacle
 		hiding_spot = _get_hiding_position(obstacle.position, obstacle.radius, player.position) 
@@ -109,7 +109,7 @@ func _hide(player, obstacles, color = null):
 			best_hiding_spot = hiding_spot
 	#end for
 	#if no suitable obstacles found then evade the target
-	if (dist_to_closest == MAX_VALUE):
+	if (dist_to_closest == max_value):
 		#for displaying
 		if color:
 			forces_to_draw[color] = _evade(player)
@@ -126,20 +126,20 @@ func _hide(player, obstacles, color = null):
 
 ###me vvv
 
-const wander_radius = 10.0
-var wander_target = Vector2(randf_range(-1,1),randf_range(-1,1)).normalized()*wander_radius #local target
+const WANDER_RADIUS = 10.0
+var wander_target = Vector2(randf_range(-1,1),randf_range(-1,1)).normalized() * WANDER_RADIUS #local target
 
 func _wander(color = null):
 	# if they spin in place increase wander distance/decrease wander radius
-	const wander_distance = 20.0
+	const WANDER_DISTANCE = 20.0
 	#if they keep going the same direction decrease jitter
-	const wander_jitter = 1.0
-	
-	wander_target += Vector2(randf_range(-1,1) * wander_jitter, randf_range(-1,1) * wander_jitter)
+	const WANDER_JITTER = 1.0
+
+	wander_target += Vector2(randf_range(-1,1) * WANDER_JITTER, randf_range(-1,1) * WANDER_JITTER)
 	wander_target = wander_target.normalized()
-	wander_target *= wander_radius
+	wander_target *= WANDER_RADIUS
 	
-	var target_local = wander_target + Vector2(wander_distance,0)
+	var target_local = wander_target + Vector2(WANDER_DISTANCE,0)
 	
 	#changing the target to world space
 	var target_world = zombie.position + target_local.rotated(zombie.heading.angle())
@@ -163,28 +163,31 @@ func _draw():
 func _pursuit(player, color = null):
 	#if the evader is ahead and facing the agent then we can just seek
 	#for the evader's current position. 
-	var ToEvader = player.position - zombie.position; 
-	var RelativeHeading = zombie.heading.dot(player.heading); 
-	if ((ToEvader.dot(zombie.heading) > 0) && (RelativeHeading < -0.95)):
+	var to_evader = player.position - zombie.position; 
+	var relative_heading = zombie.heading.dot(player.heading); 
+	if ((to_evader.dot(zombie.heading) > 0) and (relative_heading < -0.95)):
 	#acos(0.95)=18 degs 
 		return seek(player.position);
 	#Not considered ahead so we predict where the evader will be. 
 	#the look-ahead time is proportional to the distance between the evader 
 	#and the pursuer; and is inversely proportional to the sum of the 
 	#agents' velocities 
-	var LookAheadTime = ToEvader.length() / (zombie.max_speed + player.velocity.length()); 
+	var look_ahead_time = to_evader.length() / (zombie.max_speed + player.velocity.length()); 
 	#now seek to the predicted future position of the evader 
 	#for displaying
 	if color:
-		forces_to_draw[color] = seek(player.position + player.velocity * LookAheadTime)
-	return seek(player.position + player.velocity * LookAheadTime);
+		forces_to_draw[color] = seek(player.position + player.velocity * look_ahead_time)
+	return seek(player.position + player.velocity * look_ahead_time);
 
 
-func _obstacle_avoidance(): # riv
-	# box width of triangle * same*2 or so*players speed
-	# tag nearby obstacles out of all of them to only consider obstacles nearby (become local space)
-	# check if obstacles overlap detection box
-	pass
+func _obstacle_avoidance(obstacles): # riv
+	const MIN_BOX_LENGTH = 10
+	# the detection box length is proportional to the agent's velocity
+	var box_length = MIN_BOX_LENGTH + (zombie.velocity.length() / zombie.max_speed) * MIN_BOX_LENGTH
+	# tag all obstacles within range of the box for processing
+	
+	# this will keep track of the closest intersecting obstacle (CIB)
+	
 
 func _wall_avoidance():
 	pass

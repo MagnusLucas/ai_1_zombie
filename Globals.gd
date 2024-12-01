@@ -1,9 +1,9 @@
 extends Node
 
-var OBSTACLE_COUNT = 15
-var OBSTACLE_MIN_SIZE = 20 #is radius
-var OBSTACLE_MAX_SIZE = 50
+const OBSTACLE_COUNT = 15
+const OBSTACLE_MIN_SIZE = 20 #is radius
+const OBSTACLE_MAX_SIZE = 50
 
-var ZOMBIE_COUNT = 1
+const ZOMBIE_COUNT = 1
 
-var SAFE_RADIUS = 40
+const SAFE_RADIUS = 40
