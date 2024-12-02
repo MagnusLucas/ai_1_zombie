@@ -10,14 +10,15 @@ func  _ready() -> void:
 	this_zombie = get_parent()
 
 func _draw() -> void:
-	draw_circle(Vector2i(0,0), NEIGHBOURING_RADIUS, Color.CADET_BLUE, false)
+	#draw_circle(Vector2i(0,0), NEIGHBOURING_RADIUS, Color.CADET_BLUE, false)
+	pass
 
 func calculate_steering_force():
 	var force_sum = Vector2.ZERO
 	var neighbours = _get_neighbours(NEIGHBOURING_RADIUS)
-	force_sum += _cohesion(neighbours, Color.WEB_GREEN)
-	#force_sum += _alignment(neighbours, Color.BLUE)
-	#force_sum += _separation(neighbours, Color.RED) * 10
+	force_sum += _cohesion(neighbours)
+	force_sum += _alignment(neighbours)
+	force_sum += _separation(neighbours) * 10
 	return force_sum
 
 func _get_neighbours(radius):
@@ -81,11 +82,12 @@ func _cohesion(neighbors, color = null):
 		#make sure *this* agent isn't included in the calculations and that 
 		#the agent being examined is a neighbor  --> handled in _get_neighbours
 		CenterOfMass += neighbour.position
-		if (NeighborCount > 0):
-			#the center of mass is the average of the sum of positions 
-			CenterOfMass /= NeighborCount 
-			#now seek toward that position 
-			SteeringForce = this_zombie.steering_behaviour.seek(CenterOfMass)
+	if (NeighborCount > 0):
+		#the center of mass is the average of the sum of positions 
+		CenterOfMass /= NeighborCount 
+		#now seek toward that position 
+		SteeringForce = this_zombie.steering_behaviour.seek(CenterOfMass)
 	if color:
+		print(CenterOfMass, " ", NeighborCount, " ", SteeringForce, " ", this_zombie.position)
 		this_zombie.steering_behaviour.forces_to_draw[color] = SteeringForce
 	return SteeringForce

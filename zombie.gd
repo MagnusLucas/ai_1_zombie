@@ -26,8 +26,10 @@ static func not_on_obstacle_or_zombie(obstacles, zombies, potential_coords):
 			return false
 	return true
 
-func _init(coords) -> void:
+func _init(coords, zombie_name = null) -> void:
 	position = coords
+	if zombie_name:
+		name = zombie_name
 
 func _ready() -> void:
 	steering_behaviour = Steering_Behaviors.new()

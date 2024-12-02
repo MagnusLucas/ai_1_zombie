@@ -11,7 +11,7 @@ func _ready() -> void:
 	for i in range(Globals.OBSTACLE_COUNT):
 		_create_obstacle()
 	for i in range(Globals.ZOMBIE_COUNT):
-		_create_zombie()
+		_create_zombie("special")
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -37,11 +37,11 @@ func _create_obstacle():
 	obstacles.append(obstacle)
 	add_child(obstacle)
 	
-func _create_zombie():
+func _create_zombie(zombie_name = null):
 	var window_size = get_viewport_rect().size
 	var coords = Vector2i(randi_range(0+Zombie.radius, window_size.x-1-Zombie.radius),randi_range(0+Zombie.radius, window_size.y-1-Zombie.radius))
 	while !(Zombie.not_on_obstacle_or_zombie(obstacles, zombies, coords) and is_not_on_player(coords, Zombie.radius)):
 		coords = Vector2i(randi_range(0+Zombie.radius, window_size.x-1-Zombie.radius),randi_range(0+Zombie.radius, window_size.y-1-Zombie.radius))
-	var zombie = Zombie.new(coords)
+	var zombie = Zombie.new(coords, zombie_name)
 	zombies.append(zombie)
 	add_child(zombie)
