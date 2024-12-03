@@ -5,6 +5,8 @@ class_name Steering_Behaviors
 var zombie
 enum Deceleration {SLOW = 1, NORMAL = 2, FAST = 3}
 var forces_to_draw = {}
+var hide_timer = 0
+var hide_bool = true
 
 func _init() -> void:
 	pass
@@ -15,6 +17,11 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
+	hide_timer += _delta
+	if (hide_timer >= 7.0):
+		if (randi_range(0,100) >= 90):
+			hide_bool = !hide_bool
+			hide_timer = 0
 	# proper dying (but with consequences)
 	#if zombie.position.distance_to(zombie.get_parent().get_child(0).position) < zombie.radius:
 		#zombie.get_parent().get_child(0).queue_free()
@@ -23,13 +30,30 @@ func _process(_delta: float) -> void:
 func calculate_steering_force():
 	var force_sum = Vector2.ZERO
 	var player = get_node("/root/root/Player")
+	var pursuit_threshold = 15
+	var pursuit_radius = 100
 	# code goes here
 	#force_sum += _arrive(player.position, Deceleration.NORMAL)
 	#force_sum += _evade(player)
-	#force_sum += _hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
-	force_sum += _wander(Color.GREEN_YELLOW)
-	#force_sum += _obstacle_avoidance(get_node("/root/root").obstacles, Color.BLUE_VIOLET) * 30
-	force_sum += _wall_avoidance(Color.SKY_BLUE, Color.ORANGE_RED, Color.ORANGE, Color.LIGHT_CORAL)
+	if (zombie.group_steering._get_neighbours(pursuit_radius).size() >= pursuit_threshold):
+		force_sum += _pursuit(player)
+	else:
+		if (hide_bool):
+			force_sum += _hide(player, get_node("/root/root").obstacles) * 30
+		else:
+			force_sum += _wander() * 0.2
+	force_sum += _obstacle_avoidance(get_node("/root/root").obstacles) * 30
+	force_sum += _wall_avoidance() * 10
+	#if (zombie.group_steering._get_neighbours(pursuit_radius).size() >= pursuit_threshold):
+		#force_sum += _pursuit(player, Color.DARK_RED)
+	#else:
+		##force_sum += _wander(Color.SEA_GREEN) * 0.2
+		#if (hide_bool):
+			#force_sum += _hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
+		#else:
+			#force_sum += _wander(Color.SEA_GREEN) * 0.2
+	#force_sum += _obstacle_avoidance(get_node("/root/root").obstacles, Color.DARK_OLIVE_GREEN) * 30
+	#force_sum += _wall_avoidance(Color.SKY_BLUE) * 10
 	queue_redraw()
 	return force_sum
 
@@ -184,7 +208,7 @@ func _pursuit(player, color = null):
 
 # riv - broken
 func _obstacle_avoidance(obstacles, color = null):
-	const MIN_BOX_LENGTH = 10
+	const MIN_BOX_LENGTH = 20
 	var box_length = MIN_BOX_LENGTH + (zombie.velocity.length() / zombie.max_speed) * MIN_BOX_LENGTH
 	var tagged_obstacles = []
 	tagged_obstacles = _tag_obstacles_within_view_range(obstacles)

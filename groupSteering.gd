@@ -16,9 +16,13 @@ func _draw() -> void:
 func calculate_steering_force():
 	var force_sum = Vector2.ZERO
 	var neighbours = _get_neighbours(NEIGHBOURING_RADIUS)
-	#force_sum += _cohesion(neighbours)
-	#force_sum += _alignment(neighbours)
-	#force_sum += _separation(neighbours) * 10
+	#force_sum += _cohesion(neighbours, Color.PINK)
+	#force_sum += _alignment(neighbours, Color.HOT_PINK)
+	#force_sum += _separation(neighbours, Color.DEEP_PINK) * 10
+	force_sum += _cohesion(neighbours)
+	force_sum += _alignment(neighbours)
+	force_sum += _separation(neighbours) * 10
+	force_sum *= 0.2
 	return force_sum
 
 func _get_neighbours(radius):
@@ -88,6 +92,5 @@ func _cohesion(neighbors, color = null):
 		#now seek toward that position 
 		SteeringForce = this_zombie.steering_behaviour.seek(CenterOfMass)
 	if color:
-		print(CenterOfMass, " ", NeighborCount, " ", SteeringForce, " ", this_zombie.position)
 		this_zombie.steering_behaviour.forces_to_draw[color] = SteeringForce
 	return SteeringForce
