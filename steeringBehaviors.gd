@@ -34,12 +34,12 @@ func calculate_steering_force():
 	var pursuit_radius = 100
 	# code goes here
 	#force_sum += _arrive(player.position, Deceleration.NORMAL)
-	#force_sum += _evade(player)
 	if (zombie.group_steering._get_neighbours(pursuit_radius).size() >= pursuit_threshold):
 		force_sum += _pursuit(player)
 	else:
 		if (hide_bool):
 			force_sum += _hide(player, get_node("/root/root").obstacles) * 30
+			force_sum += _evade(player)
 		else:
 			force_sum += _wander() * 0.2
 	force_sum += _obstacle_avoidance(get_node("/root/root").obstacles) * 30
@@ -208,7 +208,7 @@ func _pursuit(player, color = null):
 
 # riv - broken
 func _obstacle_avoidance(obstacles, color = null):
-	const MIN_BOX_LENGTH = 20
+	const MIN_BOX_LENGTH = 30
 	var box_length = MIN_BOX_LENGTH + (zombie.velocity.length() / zombie.max_speed) * MIN_BOX_LENGTH
 	var tagged_obstacles = []
 	tagged_obstacles = _tag_obstacles_within_view_range(obstacles)
