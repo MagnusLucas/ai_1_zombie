@@ -16,6 +16,7 @@ var max_turn_rate = 10 #rad/s
 
 var steering_behaviour
 var group_steering
+var obstacle_avoidance_radius = 200
 
 static func not_on_obstacle_or_zombie(obstacles, zombies, potential_coords):
 	for obstacle in obstacles:

@@ -27,7 +27,9 @@ func calculate_steering_force():
 	#force_sum += _arrive(player.position, Deceleration.NORMAL)
 	#force_sum += _evade(player)
 	#force_sum += _hide(player, get_node("/root/root").obstacles, Color.BLUE_VIOLET)
-	#force_sum += _wander(Color.GREEN_YELLOW)
+	force_sum += _wander(Color.GREEN_YELLOW)
+	#force_sum += _obstacle_avoidance(get_node("/root/root").obstacles, Color.BLUE_VIOLET) * 30
+	force_sum += _wall_avoidance(Color.SKY_BLUE, Color.ORANGE_RED, Color.ORANGE, Color.LIGHT_CORAL)
 	queue_redraw()
 	return force_sum
 
@@ -154,6 +156,7 @@ func _draw_force(force, color):
 
 func _draw():
 	for color in forces_to_draw:
+		# doesnt work well if i want more forces in one color ;-;
 		_draw_force(forces_to_draw[color], color)
 
 ### me ^^^
@@ -179,18 +182,123 @@ func _pursuit(player, color = null):
 		forces_to_draw[color] = seek(player.position + player.velocity * look_ahead_time)
 	return seek(player.position + player.velocity * look_ahead_time);
 
-
-func _obstacle_avoidance(obstacles): # riv
+# riv - broken
+func _obstacle_avoidance(obstacles, color = null):
 	const MIN_BOX_LENGTH = 10
-	# the detection box length is proportional to the agent's velocity
 	var box_length = MIN_BOX_LENGTH + (zombie.velocity.length() / zombie.max_speed) * MIN_BOX_LENGTH
-	# tag all obstacles within range of the box for processing
-	
-	# this will keep track of the closest intersecting obstacle (CIB)
-	
+	var tagged_obstacles = []
+	tagged_obstacles = _tag_obstacles_within_view_range(obstacles)
+	var closest_intersecting_obstacle = null
+	var dist_to_closest_obstacle = max(get_viewport_rect().size.x, get_viewport_rect().size.y) * 2 # set to smth big initially
+	var local_pos_of_closest_obstacle = Vector2.ZERO
+	for tagged_obstacle in tagged_obstacles:
+		var local_pos = Vector2.ZERO
+		local_pos = _point_to_local_space(tagged_obstacle.position, zombie.position, zombie.heading)
+		if (local_pos.x >= 0):
+			var expanded_radius = tagged_obstacle.radius + zombie.radius
+			if (abs(local_pos.y) < expanded_radius):
+				var c_x = local_pos.x;
+				var c_y = local_pos.y;
+				var sqrt_part = sqrt(expanded_radius * expanded_radius - c_y * c_y);
+				var intersection_point = c_x - sqrt_part;
+				if (intersection_point <= 0):
+					intersection_point = c_x + sqrt_part;
+				if (intersection_point < dist_to_closest_obstacle):
+					dist_to_closest_obstacle = intersection_point;
+					closest_intersecting_obstacle = tagged_obstacle;
+					local_pos_of_closest_obstacle = local_pos;
+	var steering_force = Vector2.ZERO
+	if (closest_intersecting_obstacle):
+		var steering_force_multiplier = 1.0 + (box_length - local_pos_of_closest_obstacle.x) / box_length
+		# lateral force
+		steering_force.y = (closest_intersecting_obstacle.radius - local_pos_of_closest_obstacle.y) * steering_force_multiplier
+		const braking_weight = 0.2
+		steering_force.x = (closest_intersecting_obstacle.radius - local_pos_of_closest_obstacle.x) * braking_weight
+	var global_steering_vector = steering_force.rotated(zombie.heading.angle())
+	if color:
+		forces_to_draw[color] = global_steering_vector
+	return global_steering_vector
 
-func _wall_avoidance():
-	pass
+func _tag_obstacles_within_view_range(obstacles):
+	var tagged_obstacles = []
+	for obstacle in obstacles:
+		#if ((obstacle.position - zombie.position).length() <= zombie.obstacle_avoidance_radius):
+		if ((obstacle.position - zombie.position).length() <= zombie.obstacle_avoidance_radius - obstacle.radius):
+			tagged_obstacles.append(obstacle)
+	return tagged_obstacles
+
+func _point_to_local_space(point_coordinates, origin_coordinates, origin_heading):
+	var local_coordinates = (point_coordinates - origin_coordinates).rotated(-origin_heading.angle())
+	return local_coordinates
+
+func _wall_avoidance(
+	color = null, feeler_color_front = null,
+	feeler_color_left = null, feeler_color_right = null
+	):
+	#get_viewport_rect()
+	var feeler_length_multiplier = 8
+	var feelers = [
+		Vector2(8,0).rotated(zombie.heading.angle()) * feeler_length_multiplier,
+		Vector2(6,0).rotated(zombie.heading.angle() - PI/4) * feeler_length_multiplier,
+		Vector2(6,0).rotated(zombie.heading.angle() + PI/4) * feeler_length_multiplier
+	]
+	var viewport_corners = [
+		Vector2.ZERO,
+		Vector2(get_viewport_rect().size.x, 0),
+		Vector2(get_viewport_rect().size.x, get_viewport_rect().size.y),
+		Vector2(0, get_viewport_rect().size.y)
+	]
+	var ip = null
+	var distance_to_this_ip = 0.0
+	var distance_to_closest_ip = max(
+		get_viewport_rect().size.x, get_viewport_rect().size.y
+		) * 2
+	var closest_wall_start = null
+	var closest_wall_end = null
+	var closest_ip = Vector2.ZERO
+	var steering_force = Vector2.ZERO
+	#examine each feeler
+	for feeler in feelers:
+		# run through each wall checking for any intersection points
+		# check if viewport has the point at the end of vector?
+		for viewport_corner_id in viewport_corners.size():
+			var wall_start = viewport_corners[viewport_corner_id]
+			var wall_end = viewport_corners[(viewport_corner_id + 1) % 4]
+			ip = Geometry2D.segment_intersects_segment(
+				zombie.position, zombie.position + feeler, 
+				wall_start, wall_end
+				)
+			if (ip):
+				distance_to_this_ip = (ip - zombie.position).length()
+				# keeps closest ip found so far
+				if (distance_to_this_ip < distance_to_closest_ip):
+					distance_to_closest_ip = distance_to_this_ip
+					closest_wall_start = wall_start
+					closest_wall_end = wall_end
+					closest_ip = ip
+		# if ip found for this feeler,
+		# calculate force steering agent away from the wall
+		if (closest_ip):
+			# calculate by what distance the projected position of the agent
+			# will overshoot the wall (Vector2)
+			var overshoot = zombie.position + feeler - closest_ip
+			# create a force in the direction of the wall normal, with a
+			# magnitude of the overshoot
+			var closest_wall_normal = (closest_wall_end - closest_wall_start).rotated(PI/2).normalized()
+			# should never execute but just in case...
+			if (!get_viewport_rect().has_point(closest_ip + closest_wall_normal)):
+				closest_wall_normal = -closest_wall_normal
+				print("flipped normal!")
+			steering_force = closest_wall_normal * overshoot.length()
+	if color:
+		forces_to_draw[color] = steering_force
+	if feeler_color_front:
+		forces_to_draw[feeler_color_front] = feelers[0]
+	if feeler_color_left:
+		forces_to_draw[feeler_color_left] = feelers[1]
+	if feeler_color_right:
+		forces_to_draw[feeler_color_right] = feelers[2]
+	return steering_force
 
 # interpose() not necessary
 

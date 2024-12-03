@@ -16,9 +16,9 @@ func _draw() -> void:
 func calculate_steering_force():
 	var force_sum = Vector2.ZERO
 	var neighbours = _get_neighbours(NEIGHBOURING_RADIUS)
-	force_sum += _cohesion(neighbours)
-	force_sum += _alignment(neighbours)
-	force_sum += _separation(neighbours) * 10
+	#force_sum += _cohesion(neighbours)
+	#force_sum += _alignment(neighbours)
+	#force_sum += _separation(neighbours) * 10
 	return force_sum
 
 func _get_neighbours(radius):
